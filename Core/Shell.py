@@ -2,11 +2,13 @@
 # Author: nelat
 # Date  : 2022/4/18
 # Note  :
+import sys
 import os
 from Core.SingletonMeta import SingletonBase, singleton_it
 from Core.Cmd import CmdsCollection
 from Core.Config import DATA_DIR
-from Core.Utility import log_info, log_error, log_warning
+from Core.Utility import log_info, log_error, log_warning, FixedLengthList
+
 
 GLOBAL_CMDS_NAME = 'Global'
 
@@ -29,19 +31,29 @@ class Shell(object):
 		self.global_cmds.add_func_cmd('delete_project', self.delete_project, '删除指定项目', 'dp')
 		self.global_cmds.add_func_cmd('help', self.help, '简略帮助信息', 'h')
 		self.global_cmds.add_func_cmd('document', lambda: self.help(None, True), '更详细的帮助信息', 'doc')
+		self.global_cmds.add_func_cmd('quit', self.quit_shell, '关闭shell', 'q')
+
+		self.history_inputs = FixedLengthList()
+		self.history_travel_offset = 1
+
+	def add_to_history(self, inputs):
+		self.history_inputs.append(inputs)
+
+	def read_from_history(self, offset):
+		if offset > len(self.history_inputs):
+			return None
+		return self.history_inputs.read_forward(offset)
 
 	def form_input_hint(self):
 		return '%s>>>' % self.current_project.name
 
 	def run(self):
 		while self.running:
-			op = input(self.form_input_hint())
-			if op == 'quit':
-				break
-			self.do_something(op)
+			inputs = input(self.form_input_hint())
+			self.do_something(inputs)
 
-	def do_something(self, op):
-		cmd_name_or_shortcut, *args = op.split(' ')
+	def do_something(self, inputs):
+		cmd_name_or_shortcut, *args = inputs.split(' ')
 		if self.current_project != self.global_cmds:
 			if cmd_name_or_shortcut in self.current_project:
 				self.current_project.run_cmd(cmd_name_or_shortcut, *args)
@@ -59,6 +71,10 @@ class Shell(object):
 		return i == 'y'
 
 	"""----shell global operations"""
+	def quit_shell(self):
+		log_info('Quit Shell. Goodbye.')
+		self.running = False
+
 	def create_project(self, project_name):
 		"""
 		创建一个项目

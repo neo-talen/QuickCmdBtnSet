@@ -20,7 +20,7 @@ class CmdBase(object):
 		raise NotImplementedError('Derived Class must select its customizable type.')
 
 	def run(self, *args, **kwargs):
-		log_info("RunningCmd: %s." % self.name)
+		log_log("RunningCmd: %s." % self.name)
 
 	def get_cmd_type_describe(self):
 		raise NotImplementedError
@@ -123,10 +123,15 @@ class CmdsCollection(object):
 			self.add_func_cmd('remove_cmd', self.remove_cmd, '移除某个命令', 'rc')
 			self.add_func_cmd('help', lambda: self.help(None, False), '简单的列出可选指令', 'h')
 			self.add_func_cmd('document', lambda: self.help(None, True), '详细的列出指令参数信息', 'doc')
+			self.add_func_cmd('change_shortcut', self.change_shortcut, '修改快捷指令字符', 'cs')
 
 	# def disable_cmd(self, cmd_name):
 	# 	''' 关闭某些指令功能, 包括无法运行和help不显示帮助文档 '''
 	# 	self.disabled_cmd_names.add(cmd_name)
+
+	def set_fixed(self, cmd_name):
+		''' make a cmd not customizable '''
+		pass
 
 	def __bool__(self):
 		return self.name != 'None'
@@ -180,6 +185,12 @@ class CmdsCollection(object):
 			log_log('AddCmd Failed.')
 
 	def change_shortcut(self, cmd_name, new_shortcut):
+		"""
+		修改快捷指令字符
+		:param cmd_name: 待修改的指令名称
+		:param new_shortcut: 新的快捷指令字符
+		:return:
+		"""
 		if cmd_name in self.cmds:
 			if new_shortcut in self.quick_shortcut_to_cmd:
 				log_error('ChangeShorcut: Failed for new shortcut:%s already exist.' % new_shortcut)
@@ -221,7 +232,7 @@ class CmdsCollection(object):
 		return cmd
 
 	def run_cmd(self, cmd_name_or_shortcut, *args, **kwargs):
-		log_info('Running in collection: %s' % self.name)
+		log_log('Running in collection: %s' % self.name)
 		cmd = self._get_cmd_by_name_or_shorcut(cmd_name_or_shortcut)
 		if cmd:
 			try:
@@ -242,14 +253,14 @@ class CmdsCollection(object):
 			# print all info
 			for cmd_name, cmd in self.cmds.items():
 				cmd_info = cmd.doc() if use_doc else str(cmd)
-				log_info('<%s>: %s.' % (self.name, cmd_info))
+				log_info('<Project: %s>: %s.' % (self.name, cmd_info))
 		else:
 			cmd = self._get_cmd_by_name_or_shorcut(cmd_name_or_short_cut)
 			if cmd:
 				cmd_info = cmd.doc() if use_doc else str(cmd)
-				log_info('<%s>: %s.' % (self.name, cmd_info))
+				log_info('<Project: %s>: %s.' % (self.name, cmd_info))
 			else:
-				log_info('<%s>: %s not found.' % (self.name, cmd_name_or_short_cut))
+				log_info('<Project: %s>: %s not found.' % (self.name, cmd_name_or_short_cut))
 
 	def __contains__(self, item):
 		return bool(self._get_cmd_by_name_or_shorcut(item))
