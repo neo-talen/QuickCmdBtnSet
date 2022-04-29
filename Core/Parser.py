@@ -2,25 +2,22 @@
 # Author: nelat
 # Date  : 2022/4/18
 # Note  :
-from Core.SingletonMeta import singleton_it
+import os
+import json
+from typing import List
+from Core.Config import DATA_DIR, COLLECTIONS_INFO_PATH
+from Core.Cmd import CmdsCollection
 
 
-class SingleCmd(object):
-	''' 单条指令 '''
-	__slots__ = ['work_dir', 'op_cmd', 'args']
-
-	def __init__(self, work_dir, op_cmd, args):
-		'''
-		:param work_dir: 指令工作目录
-		:param op_cmd: 指令运行程序名
-		:param args: 指令运行参数
-		'''
-		self.work_dir, self.op_cmd, self.args = work_dir, op_cmd, args
+def write_collections_info(collections: List[CmdsCollection]):
+	with open(COLLECTIONS_INFO_PATH, 'w') as fp:
+		json.dump({p.name: p.to_dict for p in collections}, fp)
 
 
-def run_a_cmd(cmd: SingleCmd):
-	print(cmd)
+def read_collections_info() -> List[CmdsCollection]:
+	with open(COLLECTIONS_INFO_PATH, 'r') as fp:
+		collections_info = json.load(fp)
+		return [
+			CmdsCollection().from_dict(dic) for collection_name, dic in collections_info.items()
+		]
 
-
-if __name__ == '__main__':
-	run_a_cmd(SingleCmd(1, 2, 3))
