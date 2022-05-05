@@ -5,19 +5,19 @@
 from Core.Config import IS_DEBUG
 
 
-def log_warning(msg: str):
+def log_warning(msg):
 	print('WARNING: ', msg)
 
 
-def log_error(msg: str):
+def log_error(msg):
 	print('ERROR: ', msg)
 
 
-def log_info(msg: str):
+def log_info(msg):
 	print('INFO: ', msg)
 
 
-def log_log(msg: str):
+def log_log(msg):
 	if IS_DEBUG:
 		print('LOG: ', msg)
 
@@ -44,6 +44,8 @@ class FixedLengthList(object):
 			self.write_idx = self.write_idx % self.max_limit
 
 	def read_forward(self, offset):
+		if offset <= 0:
+			return None
 		idx = (self.write_idx - offset) % len(self.cache)
 		return self.cache[idx]
 

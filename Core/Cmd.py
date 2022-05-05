@@ -122,6 +122,7 @@ class CmdsCollection(object):
 			self.add_func_cmd('add_cmd', self.add_system_cmd, '为当前命令集合新增一个命令', 'ac')
 			self.add_func_cmd('remove_cmd', self.remove_cmd, '移除某个命令', 'rc')
 			self.add_func_cmd('help', lambda: self.help(None, False), '简单的列出可选指令', 'h')
+			self.add_func_cmd('list_cmds', lambda: self.help(None, False), '简略帮助信息', 'ls')
 			self.add_func_cmd('document', lambda: self.help(None, True), '详细的列出指令参数信息', 'doc')
 			self.add_func_cmd('change_shortcut', self.change_shortcut, '修改快捷指令字符', 'cs')
 

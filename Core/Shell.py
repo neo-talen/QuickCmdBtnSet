@@ -4,6 +4,7 @@
 # Note  :
 import sys
 import os
+import keyboard
 from Core.SingletonMeta import SingletonBase, singleton_it
 from Core.Cmd import CmdsCollection
 from Core.Config import DATA_DIR
@@ -11,6 +12,20 @@ from Core.Utility import log_info, log_error, log_warning, FixedLengthList
 
 
 GLOBAL_CMDS_NAME = 'Global'
+
+
+class InputHandler(object):
+	"""
+	管理所有的输入，以enter键作为结束一次输入的返回
+	"""
+	def __init__(self):
+		self.inputs = ''
+
+	def on_press(self, key):
+		pass
+
+	def fetch_one(self):
+		pass
 
 
 @singleton_it
@@ -30,11 +45,12 @@ class Shell(object):
 		self.global_cmds.add_func_cmd('switch_project', self.switch_project, '切换到指定项目', 'sp')
 		self.global_cmds.add_func_cmd('delete_project', self.delete_project, '删除指定项目', 'dp')
 		self.global_cmds.add_func_cmd('help', self.help, '简略帮助信息', 'h')
+		self.global_cmds.add_func_cmd('list_cmds', self.help, '简略帮助信息', 'ls')
 		self.global_cmds.add_func_cmd('document', lambda: self.help(None, True), '更详细的帮助信息', 'doc')
 		self.global_cmds.add_func_cmd('quit', self.quit_shell, '关闭shell', 'q')
 
 		self.history_inputs = FixedLengthList()
-		self.history_travel_offset = 1
+		self.history_travel_offset = 0
 
 	def add_to_history(self, inputs):
 		self.history_inputs.append(inputs)
@@ -48,12 +64,49 @@ class Shell(object):
 		return '%s>>>' % self.current_project.name
 
 	def run(self):
+
+		keyboard.add_hotkey('up', self.on_hotkey_up)
+		keyboard.add_hotkey('down', self.on_hotkey_down)
+		keyboard.add_hotkey('tab', self.on_hotkey_tab)
+
 		while self.running:
+			# input()
 			inputs = input(self.form_input_hint())
 			self.do_something(inputs)
+			self.add_to_history(inputs)
+			self.clear_states()
+
+	def clear_states(self):
+		self.history_travel_offset = 1
+
+	def on_hotkey_tab(self):
+		pass
+
+	def on_hotkey_up(self):
+		self.history_travel_offset += 1
+		history = self.read_from_history(self.history_travel_offset)
+		if history:
+			sys.stdout.flush()
+			print(history + '\r')
+
+	def on_hotkey_down(self):
+		if self.history_travel_offset > 0:
+			self.history_travel_offset -= 1
+		history = self.read_from_history(self.history_travel_offset)
+		if history:
+			sys.stdout.flush()
+			print(history + '\r')
+
+	def refresh_input(self, msg):
+		sys.stdout.flush()
+
+	def write_input(self, msg):
+		print('yoyo')
 
 	def do_something(self, inputs):
-		cmd_name_or_shortcut, *args = inputs.split(' ')
+		splited_inputs = inputs.split(' ')
+		cmd_name_or_shortcut = splited_inputs[0]
+		args = splited_inputs[1:]
 		if self.current_project != self.global_cmds:
 			if cmd_name_or_shortcut in self.current_project:
 				self.current_project.run_cmd(cmd_name_or_shortcut, *args)
@@ -89,6 +142,7 @@ class Shell(object):
 			log_error('project name: <%s> is reserved by this application.' % GLOBAL_CMDS_NAME)
 		else:
 			self.current_project = CmdsCollection(project_name)
+			self.dump_current_project()
 
 	def dump_current_project(self):
 		"""
